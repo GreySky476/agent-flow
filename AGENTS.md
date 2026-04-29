@@ -142,8 +142,8 @@
 - `MemoryStore` interface: `add`, `getRecent`, `updateSummary`, `getSummary`, `updateEntityMemory`, `getEntityMemory`
 - `SmartMemoryService` implements `MemoryStore`:
   - Short-term: Redis List `mem:short:{sid}`, max 50 items, 4h TTL
-  - Long-term summary: MySQL `memory_summaries` table
-  - Entity memory: MySQL `memory_entities` table
+  - Long-term summary: PostgreSQL `memory_summaries` table
+  - Entity memory: PostgreSQL `memory_entities` table
   - `compress(sessionId)`: triggered when estimated tokens > `trigger-tokens` (2000) → LLM summarize + extract entities → trim Redis to `keep-recent` (10) items
   - `getContextForLLM(sessionId)`: returns "摘要 + 实体 + 最近10条消息" for agent prompt injection
 - Configured via `memory.short-term.max-items`, `memory.compression.trigger-tokens`, `memory.compression.keep-recent`
