@@ -1,0 +1,133 @@
+spring:
+  application:
+    name: agent-flow
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ai_customer_service}
+    username: ${DB_USER:ai_user}
+    password: ${DB_PASSWORD:ai_password}
+    driver-class-name: org.postgresql.Driver
+
+models:
+  list:
+    - name: deepseek-v4-flash
+      type: openai
+      api-key: ${DEEPSEEK_API_KEY:sk-your-deepseek-key}
+      base-url: https://api.deepseek.com
+      model-name: deepseek-v4-flash
+      cost-tier: low
+
+    - name: tencent/hy3-preview:free
+      type: openai
+      api-key: ${OPENROUTER_API_KEY:sk-your-openrouter-key}
+      base-url: https://openrouter.ai/api/v1
+      model-name: tencent/hy3-preview:free
+      cost-tier: medium
+
+    - name: z-ai/glm-4.5-air:free
+      type: openai
+      api-key: ${OPENROUTER_API_KEY:sk-your-openrouter-key}
+      base-url: https://openrouter.ai/api/v1
+      model-name: z-ai/glm-4.5-air:free
+      cost-tier: high
+
+    - name: qwen/qwen3-coder:free
+      type: qwen
+      api-key: ${OPENROUTER_API_KEY:sk-your-openrouter-key}
+      base-url: https://openrouter.ai/api/v1
+      model-name: qwen/qwen3-coder:free
+      cost-tier: low
+
+    - name: azure-gpt4
+      type: azure
+      api-key: ${AZURE_OPENAI_API_KEY:sk-your-azure-key}
+      base-url: https://your-resource.openai.azure.com
+      model-name: gpt-4
+      cost-tier: high
+
+    - name: local-llama3
+      type: ollama
+      api-key: ""
+      base-url: http://localhost:11434
+      model-name: llama3
+      cost-tier: low
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        sliding-window-type: count_based
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      gpt-4o:
+        base-config: default
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 30s
+
+rag:
+  enabled: true
+  embedding:
+    api-key: ${SILICONFLOW_API_KEY:sk-your-siliconflow-key}
+    base-url: https://api.siliconflow.cn/v1
+    model-name: BAAI/bge-large-zh-v1.5
+    dimension: 1024
+  pgvector:
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+    database: ${DB_NAME:ai_customer_service}
+    user: ${DB_USER:ai_user}
+    password: ${DB_PASSWORD:ai_password}
+
+agentflow:
+  workflow-definition-storage: database
+  max-concurrent-agents: 10
+  default-timeout-seconds: 120
+  mcp:
+    export:
+      enabled: false
+      endpoint: /mcp/agentflow
+      api-key: ${MCP_EXPORT_API_KEY:}
+  agents:
+    list:
+      - name: customer_service
+        system-prompt: 你是一个客户服务助手，请用友好、专业的中文回答用户问题。如果遇到无法解决的问题，请如实告知用户。
+        tool-names:
+          - search_knowledge_base
+          - create_ticket
+        model-preference: deepseek-v4-flash
+
+      - name: code_reviewer
+        system-prompt: 你是一个代码审查专家。请分析提供的代码，指出潜在的问题、安全隐患和优化建议。回答时请使用中文。
+        tool-names:
+          - analyze_code
+        model-preference: gpt-4o-mini
+
+mcp:
+  servers:
+    - name: filesystem-tool
+      endpoint: http://localhost:8081/mcp
+      enabled: false
+    - name: web-search
+      endpoint: http://localhost:8082/mcp
+      enabled: false
+
+neo4j:
+  uri: ${NEO4J_URI:bolt://localhost:7687}
+  authentication:
+    username: ${NEO4J_USER:neo4j}
+    password: ${NEO4J_PASSWORD:test1234}
+
+graph:
+  entity-relation-prompt-template: "从以下文本中抽取实体和关系，以JSON格式输出..."
+
+memory:
+  short-term:
+    max-items: 50
+  compression:
+    trigger-tokens: 2000
+    keep-recent: 10
