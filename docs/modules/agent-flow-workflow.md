@@ -180,3 +180,4 @@ public String search(String query) { ... }
 | 2026-05-19 | 新增 BranchEvaluator（8 种条件类型）、LlmNodeExecutor（RAG/Tool 增强）、WorkflowVersionService | AI Agent |
 | 2026-05-19 | 新增 RAG 依赖，RagToolProvider 通过 SpringContextHolder 获取 HybridSearchService | AI Agent |
 | 2026-05-19 | LlmNodeExecutor 新增 GatewayCallLog 记录；发布改为同行更新（不再创建版本快照）；默认排除 ARCHIVED；聊天 Redis 会话持久化 | AI Agent |
+| 2026-05-19 | LangChain4j 升级至 1.14.1；新增 sendThinking/returnThinking 参数解决 DeepSeek 思考模式 + Tool 调用时 reasoning_content 丢失问题 | AI Agent |

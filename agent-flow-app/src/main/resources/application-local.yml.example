@@ -13,7 +13,8 @@ models:
       api-key: sk-your-deepseek-key     # 替换为你的 DeepSeek API Key
       base-url: https://api.deepseek.com
       model-name: deepseek-v4-flash
-      reasoning-effort: none            # 禁用思考模式（避免工具调用报错）
+      send-thinking: true               # 思考模式下，发送请求时附带 reasoning_content
+      return-thinking: true             # 思考模式下，返回结果时存储 reasoning_content
       cost-tier: low
 
 #    - name: tencent/hy3-preview:free
