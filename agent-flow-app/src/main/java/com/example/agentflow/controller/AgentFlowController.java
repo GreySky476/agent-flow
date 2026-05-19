@@ -60,6 +60,8 @@ public class AgentFlowController {
         }
         if (status != null && !status.isBlank()) {
             wrapper.eq(WorkflowDefinition::getStatus, status.toUpperCase());
+        } else {
+            wrapper.ne(WorkflowDefinition::getStatus, "ARCHIVED");
         }
         wrapper.orderByDesc(WorkflowDefinition::getUpdatedAt);
 
@@ -207,17 +209,17 @@ public class AgentFlowController {
     public Map<String, Object> chat(@PathVariable Long definitionId,
                                      @RequestBody Map<String, Object> body) {
         String message = (String) body.get("message");
-        String conversationId = (String) body.getOrDefault("conversationId", "");
+        String sessionId = (String) body.getOrDefault("sessionId", "");
 
         if (message == null || message.isBlank()) {
             throw new IllegalArgumentException("Message is required");
         }
 
+        String chatKey = "wf:chat:" + definitionId + ":session:" + sessionId;
+
         Map<String, Object> params = new HashMap<>();
         params.put("userInput", message);
-        if (!conversationId.isEmpty()) {
-            params.put("conversationId", conversationId);
-        }
+        params.put("sessionId", sessionId);
 
         Map<String, Object> result = workflowExecutor.execute(definitionId, params);
         String instanceId = (String) result.get("_instanceId");
@@ -231,13 +233,39 @@ public class AgentFlowController {
             redisTemplate.opsForValue().set("wf:meta:" + instanceId,
                     objectMapper.writeValueAsString(Map.of("status", "COMPLETED", "result", result)),
                     Duration.ofHours(1));
+
+            List<Map<String, Object>> history = loadChatHistory(definitionId, sessionId);
+            history.add(Map.of("role", "user", "content", message));
+            history.add(Map.of("role", "assistant", "content", response));
+            redisTemplate.opsForValue().set(chatKey,
+                    objectMapper.writeValueAsString(history),
+                    Duration.ofHours(24));
         } catch (Exception ignored) {}
 
         return Map.of(
                 "success", true,
                 "instanceId", instanceId,
-                "response", response,
-                "conversationId", conversationId.isEmpty() ? instanceId : conversationId);
+                "response", response);
+    }
+
+    @GetMapping("/chat/{definitionId}/history")
+    public Map<String, Object> getChatHistory(@PathVariable Long definitionId,
+                                               @RequestParam String sessionId) {
+        List<Map<String, Object>> history = loadChatHistory(definitionId, sessionId);
+        return Map.of("messages", history);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> loadChatHistory(Long definitionId, String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) return new ArrayList<>();
+        String chatKey = "wf:chat:" + definitionId + ":session:" + sessionId;
+        try {
+            String json = redisTemplate.opsForValue().get(chatKey);
+            if (json != null && !json.isBlank()) {
+                return objectMapper.readValue(json, List.class);
+            }
+        } catch (Exception ignored) {}
+        return new ArrayList<>();
     }
 
     @GetMapping("/tools")

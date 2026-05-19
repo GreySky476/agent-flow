@@ -37,9 +37,11 @@
     <div style="flex: 1; display: flex; flex-direction: column">
       <div style="
         padding: 12px 20px; border-bottom: 1px solid #ebeef5;
-        font-size: 16px; font-weight: 600; background: #fff
+        font-size: 16px; font-weight: 600; background: #fff;
+        display: flex; justify-content: space-between; align-items: center
       ">
-        {{ selectedWorkflow ? selectedWorkflow.name : '请选择一个工作流开始对话' }}
+        <span>{{ selectedWorkflow ? selectedWorkflow.name : '请选择一个工作流开始对话' }}</span>
+        <el-button v-if="messages.length > 0" size="small" text @click="clearChat">清空对话</el-button>
       </div>
 
       <!-- 消息列表 -->
@@ -85,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import axios from 'axios'
@@ -97,7 +99,7 @@ const publishedWorkflows = ref([])
 const selectedWorkflow = ref(null)
 const messages = ref([])
 const chatContainer = ref(null)
-const conversationId = ref('')
+const sessionId = ref('')
 
 const filteredWorkflows = computed(() => {
   if (!searchText.value) return publishedWorkflows.value
@@ -106,7 +108,18 @@ const filteredWorkflows = computed(() => {
   )
 })
 
-onMounted(() => fetchPublished())
+onMounted(() => {
+  fetchPublished()
+})
+
+function getSessionId() {
+  let id = localStorage.getItem('agentflow_chat_session')
+  if (!id) {
+    id = crypto.randomUUID().substring(0, 8)
+    localStorage.setItem('agentflow_chat_session', id)
+  }
+  return id
+}
 
 async function fetchPublished() {
   try {
@@ -117,11 +130,30 @@ async function fetchPublished() {
   }
 }
 
-function selectWorkflow(wf) {
+async function selectWorkflow(wf) {
   selectedWorkflow.value = wf
   messages.value = []
   inputText.value = ''
-  conversationId.value = ''
+  sessionId.value = getSessionId()
+
+  await loadHistory(wf.id)
+}
+
+async function loadHistory(definitionId) {
+  try {
+    const res = await axios.get(`/api/v1/agentflow/chat/${definitionId}/history`, {
+      params: { sessionId: sessionId.value }
+    })
+    messages.value = res.data.messages || []
+  } catch (e) {
+    // 历史接口暂不可用，忽略
+  }
+}
+
+function clearChat() {
+  messages.value = []
+  localStorage.removeItem('agentflow_chat_session')
+  sessionId.value = getSessionId()
 }
 
 async function sendMessage() {
@@ -140,11 +172,9 @@ async function sendMessage() {
   try {
     const res = await axios.post(`/api/v1/agentflow/chat/${selectedWorkflow.value.id}`, {
       message: text,
-      conversationId: conversationId.value
+      sessionId: sessionId.value
     })
-    const data = res.data
-    messages.value.push({ role: 'assistant', content: data.response || '无响应内容' })
-    conversationId.value = data.conversationId || conversationId.value
+    messages.value.push({ role: 'assistant', content: res.data.response || '无响应内容' })
   } catch (e) {
     messages.value.push({ role: 'assistant', content: '请求失败: ' + (e.response?.data?.message || e.message) })
   } finally {

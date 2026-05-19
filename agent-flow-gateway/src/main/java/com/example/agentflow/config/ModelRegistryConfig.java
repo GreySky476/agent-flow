@@ -10,7 +10,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import dev.langchain4j.model.azure.AzureOpenAiChatModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
@@ -45,16 +44,22 @@ public class ModelRegistryConfig {
 
     private ChatModel createChatModel(ModelProperties.ModelConfig config) {
         return switch (config.getType()) {
-            case openai, qwen -> OpenAiChatModel.builder()
-                    .apiKey(config.getApiKey())
-                    .modelName(config.getModelName())
-                    .baseUrl(config.getBaseUrl())
-                    .build();
-            case azure -> AzureOpenAiChatModel.builder()
-                    .apiKey(config.getApiKey())
-                    .endpoint(config.getBaseUrl())
-                    .deploymentName(config.getModelName())
-                    .build();
+            case openai, qwen -> {
+                var builder = OpenAiChatModel.builder()
+                        .apiKey(config.getApiKey())
+                        .modelName(config.getModelName())
+                        .baseUrl(config.getBaseUrl());
+                if (config.getSendThinking() != null) {
+                    // FIX：思考模式：deepseek 模型需要，默认关闭
+                    builder.sendThinking(config.getSendThinking());
+                }
+                if (config.getReturnThinking() != null) {
+                    // FIX：思考模式：deepseek 模型需要，默认关闭
+                    builder.returnThinking(config.getReturnThinking());
+                }
+                yield builder.build();
+            }
+            case azure -> throw new UnsupportedOperationException("Azure not supported in feature-v1");
             case ollama -> OllamaChatModel.builder()
                     .baseUrl(config.getBaseUrl())
                     .modelName(config.getModelName())
@@ -73,6 +78,8 @@ public class ModelRegistryConfig {
             private String apiKey;
             private String baseUrl;
             private String modelName;
+            private Boolean sendThinking;
+            private Boolean returnThinking;
             private CostTier costTier = CostTier.medium;
         }
 

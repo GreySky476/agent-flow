@@ -11,15 +11,16 @@
             :limit="1"
             :on-change="handleFileChange"
             :on-remove="handleFileRemove"
-            :accept="'.pdf,.docx,.ppt,.pptx,.md,.txt,.csv,.html,.png,.jpg,.jpeg,.mp3,.wav'"
+            :accept="'.pdf,.docx,.ppt,.pptx,.xls,.xlsx,.md,.txt,.csv,.html,.json,.xml'"
           >
             <template #trigger>
               <el-button type="primary">选择文件</el-button>
             </template>
             <template #tip>
-              <div style="margin-top: 8px; color: #909399; font-size: 12px">
-                支持 PDF / DOCX / PPT / PPTX / MD / TXT / CSV / HTML / 图片 / 音频 (最大 50MB)
-              </div>
+                <div style="margin-top: 8px; color: #909399; font-size: 12px">
+                  支持 PDF / DOCX / PPT / PPTX / XLS / XLSX / MD / TXT / CSV / JSON / HTML，最大 50MB<br/>
+                  <span style="color: #e6a23c">不支持：压缩包 (zip/tar/gz/7z)、图片、音频、视频（仅元数据，无有效文本）</span>
+                </div>
             </template>
           </el-upload>
 

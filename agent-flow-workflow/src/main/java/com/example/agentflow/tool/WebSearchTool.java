@@ -4,12 +4,14 @@ import org.springframework.stereotype.Component;
 
 import com.example.agentflow.annotation.AgentTool;
 
+import dev.langchain4j.agent.tool.Tool;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 public class WebSearchTool {
 
+    @Tool("在互联网上搜索信息，接收 query 参数，返回相关搜索结果")
     @AgentTool(
             name = "web_search",
             description = "在互联网上搜索信息，接收 query 参数，返回相关搜索结果",
@@ -37,6 +39,7 @@ public class WebSearchTool {
                 """.formatted(query, query, query, query);
     }
 
+    @Tool("抓取指定 URL 的网页内容")
     @AgentTool(
             name = "fetch_page",
             description = "抓取指定 URL 的网页内容"
