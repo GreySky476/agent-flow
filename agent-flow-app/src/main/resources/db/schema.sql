@@ -50,10 +50,20 @@ CREATE TABLE IF NOT EXISTS wf_definition (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     status VARCHAR(20) DEFAULT 'DRAFT',
+    version INT DEFAULT 1,
+    is_public BOOLEAN DEFAULT FALSE,
+    input_schema TEXT,
+    output_schema TEXT,
     definition_json TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 迁移：为已有 wf_definition 表添加新字段（feature-v1 工作流重构）
+ALTER TABLE wf_definition ADD COLUMN IF NOT EXISTS version INT DEFAULT 1;
+ALTER TABLE wf_definition ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE;
+ALTER TABLE wf_definition ADD COLUMN IF NOT EXISTS input_schema TEXT;
+ALTER TABLE wf_definition ADD COLUMN IF NOT EXISTS output_schema TEXT;
 
 -- 工作流节点
 CREATE TABLE IF NOT EXISTS wf_node (

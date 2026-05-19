@@ -82,8 +82,8 @@
 
 | 文件 | 路径 | 说明 |
 |------|------|------|
-| `application.yml` | `src/main/resources/resources/application.yml` | Spring Boot + 模型 + RAG + Agent + MCP 配置 |
-| `schema.sql` | `src/main/resources/resources/db/schema.sql` | 数据库建表 DDL |
+| `application.yml` | `src/main/resources/application.yml` | Spring Boot + 模型 + RAG + Agent + MCP 配置 |
+| `schema.sql` | `src/main/resources/db/schema.sql` | 数据库建表 DDL |
 
 ---
 

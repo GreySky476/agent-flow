@@ -15,9 +15,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -25,7 +22,6 @@ import com.example.agentflow.entity.WorkflowDefinition;
 import com.example.agentflow.entity.WorkflowNode;
 import com.example.agentflow.mapper.WorkflowDefinitionMapper;
 import com.example.agentflow.mapper.WorkflowNodeMapper;
-import com.example.agentflow.model.AgentConfig;
 import com.example.agentflow.model.WorkflowState;
 
 import jakarta.annotation.PreDestroy;
@@ -42,12 +38,11 @@ public class WorkflowExecutor {
 
     private final WorkflowDefinitionMapper definitionMapper;
     private final WorkflowNodeMapper nodeMapper;
-    private final AgentExecutionService agentExecutionService;
-    private final AgentRegistry agentRegistry;
+    private final LlmNodeExecutor llmNodeExecutor;
+    private final BranchEvaluator branchEvaluator;
     private final StringRedisTemplate redisTemplate;
 
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-    private final ExpressionParser spelParser = new SpelExpressionParser();
 
     public Map<String, Object> execute(Long definitionId, Map<String, Object> initialInput) {
         String instanceId = UUID.randomUUID().toString().substring(0, 8);
@@ -122,7 +117,7 @@ public class WorkflowExecutor {
         }
 
         log.info("Workflow [{}] instance [{}] completed", definition.getName(), instanceId);
-        return state.getVariables();
+        return state.getData();
     }
 
     private void executeNode(WorkflowNode node, WorkflowState state, String instanceId) {
@@ -131,18 +126,8 @@ public class WorkflowExecutor {
         switch (node.getNodeType().toUpperCase()) {
             case "START" -> state.put("_started", true);
             case "END" -> state.put("_completed", true);
-            case "AGENT" -> {
-                String agentName = extractConfigValue(node.getConfigJson(), "agentName");
-                AgentConfig config = agentRegistry.getAgentConfig(agentName);
-                if (config == null) {
-                    config = new AgentConfig();
-                    config.setName(agentName != null ? agentName : "default");
-                    config.setSystemPrompt("你是一个智能助手");
-                }
-                state.put("task", state.get("userQuery"));
-                agentExecutionService.execute(agentName, state);
-            }
-            case "CONDITION" -> evaluateCondition(node, state);
+            case "LLM" -> llmNodeExecutor.execute(node, state);
+            case "BRANCH", "CONDITION" -> evaluateBranch(node, state);
             default -> log.warn("Unknown node type: {}", node.getNodeType());
         }
 
@@ -150,26 +135,9 @@ public class WorkflowExecutor {
         persistState(instanceId, node.getNodeId(), state);
     }
 
-    private void evaluateCondition(WorkflowNode node, WorkflowState state) {
-        String expression = extractConfigValue(node.getConfigJson(), "expression");
-        if (expression == null || expression.isBlank()) return;
-        try {
-            StandardEvaluationContext context = new StandardEvaluationContext(state.getVariables());
-            Boolean result = spelParser.parseExpression(expression).getValue(context, Boolean.class);
-            state.put("_condition_" + node.getNodeId(), result);
-        } catch (Exception e) {
-            log.error("Condition [{}] failed: {}", node.getNodeId(), e.getMessage());
-            state.put("_condition_" + node.getNodeId(), false);
-        }
-    }
-
-    private String extractConfigValue(String configJson, String key) {
-        if (configJson == null || configJson.isBlank()) return null;
-        try {
-            var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            var root = mapper.readTree(configJson);
-            return root.has(key) ? root.get(key).asText() : null;
-        } catch (Exception ignored) { return null; }
+    private void evaluateBranch(WorkflowNode node, WorkflowState state) {
+        String result = branchEvaluator.evaluate(node, state);
+        log.debug("Branch [{}] result: {}", node.getNodeId(), result);
     }
 
     private List<List<String>> kahnLevels(Map<String, List<String>> adjacency, Map<String, Integer> inDegree) {
@@ -200,5 +168,8 @@ public class WorkflowExecutor {
         }
     }
 
-    @PreDestroy void shutdown() { executor.shutdown(); }
+    @PreDestroy
+    void shutdown() {
+        executor.shutdown();
+    }
 }

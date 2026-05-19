@@ -80,11 +80,38 @@
 
 | 方法 | 路径 | 说明 | 请求体/参数 |
 |------|------|------|-------------|
+| GET | `/api/v1/agentflow/definitions` | 工作流列表（分页+搜索） | Query: `page`, `size`, `keyword`, `status` |
 | POST | `/api/v1/agentflow/definitions` | 保存工作流定义 | `DefinitionRequest` |
 | GET | `/api/v1/agentflow/definitions/{id}` | 获取定义详情 | Path: `id` |
+| DELETE | `/api/v1/agentflow/definitions/{id}` | 删除（软归档） | Path: `id` |
+| PUT | `/api/v1/agentflow/definitions/{id}/publish` | 发布工作流（升版+可选公开） | Body: `{"isPublic":true}` |
+| PUT | `/api/v1/agentflow/definitions/{id}/public` | 切换公开状态 | Body: `{"isPublic":true}` |
+| GET | `/api/v1/agentflow/definitions/published` | 已发布且公开的工作流列表 | — |
 | POST | `/api/v1/agentflow/execute/{definitionId}` | 执行工作流 | Path: `definitionId`, Body: `Map<String,Object>` |
+| POST | `/api/v1/agentflow/chat/{definitionId}` | 工作流聊天（交互式执行） | Path: `definitionId`, Body: `{"message":"...","conversationId":"..."}` |
 | GET | `/api/v1/agentflow/status/{instanceId}` | 查询执行状态 | Path: `instanceId` |
 | GET | `/api/v1/agentflow/tools` | 已注册工具列表 | — |
+
+**列表响应**：
+```json
+{
+  "total": 5,
+  "page": 1,
+  "size": 10,
+  "items": [
+    {
+      "id": 1,
+      "name": "客户服务流程",
+      "description": "...",
+      "status": "DRAFT",
+      "version": 1,
+      "isPublic": false,
+      "createdAt": "2026-05-19T...",
+      "updatedAt": "2026-05-19T..."
+    }
+  ]
+}
+```
 
 **保存定义请求体 `DefinitionRequest`**：
 ```json
@@ -94,6 +121,8 @@
   "description": "自动处理客户咨询",
   "status": "DRAFT",
   "definitionJson": "...",
+  "inputSchema": "...",
+  "outputSchema": "...",
   "nodes": [
     {
       "nodeId": "start_1",
@@ -101,17 +130,27 @@
       "configJson": null,
       "positionX": 100,
       "positionY": 100,
-      "nextNodes": "agent_1"
+      "nextNodes": "llm_1"
     },
     {
-      "nodeId": "agent_1",
-      "nodeType": "AGENT",
-      "configJson": "{\"agentName\":\"customer_service\"}",
+      "nodeId": "llm_1",
+      "nodeType": "LLM",
+      "configJson": "{\"modelName\":\"deepseek-v4-flash\",\"systemPrompt\":\"...\",\"rag\":{\"knowledgeBaseIds\":[1],\"topK\":5},\"toolNames\":[\"web_search\"]}",
       "positionX": 300,
       "positionY": 100,
       "nextNodes": "end_1"
     }
   ]
+}
+```
+
+**工作流聊天响应**：
+```json
+{
+  "success": true,
+  "instanceId": "a1b2c3d4",
+  "response": "根据您的问题...",
+  "conversationId": "a1b2c3d4"
 }
 ```
 
@@ -157,3 +196,4 @@
 | 日期 | 变更 | 作者 |
 |------|------|------|
 | 2026-05-19 | 初始文档 | AI Agent |
+| 2026-05-19 | Workflow API 扩展：新增列表、删除、发布、公开、已发布列表、聊天端点；移除 AGENT 节点类型示例 | AI Agent |

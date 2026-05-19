@@ -6,18 +6,19 @@
 
 ## 🧭 快速定位
 
-| 我要找… | 去这里 |
-|----------|--------|
-| 项目整体架构 | `docs/architecture.md` |
-| 编码规范与约定 | `docs/conventions.md` |
+| 我要找…                        | 去这里                             |
+|-----------------------------|---------------------------------|
+| 项目功能设计与迭代                   | `docs/function-design.md`       |
+| 项目整体架构                      | `docs/architecture.md`          |
+| 编码规范与约定                     | `docs/conventions.md`           |
 | 模块详情 (gateway/rag/workflow) | `docs/modules/{module-name}.md` |
-| 数据库 Schema | `docs/schema/schema.md` |
-| API 端点清单 | `docs/schema/api-endpoints.md` |
-| 架构决策记录 | `docs/adr/` |
-| 当前需求 / Epic | `docs/roadmap/current.md` |
-| 任务卡模板 | `tasks/_template.md` |
-| 知识库维护规则 | `docs/knowledge-maintenance.md` |
-| feature-v1 精简变更记录 | `feature-v1-agents.md` |
+| 数据库 Schema                  | `docs/schema/schema.md`         |
+| API 端点清单                    | `docs/schema/api-endpoints.md`  |
+| 架构决策记录                      | `docs/adr/`                     |
+| 当前需求 / Epic                 | `docs/roadmap/current.md`       |
+| 任务卡模板                       | `tasks/_template.md`            |
+| 知识库维护规则                     | `docs/knowledge-maintenance.md` |
+| feature-v1 精简变更记录           | `feature-v1-agents.md`          |
 
 ---
 
@@ -52,7 +53,8 @@ docker compose down                   # 停止
 
 AI 智能体必须绝对遵守以下规则，违反即为失败：
 
-1. **先读 `AGENTS.md` 定位**，再读目标文档，再动手改代码。
+0. **先读 `AGENTS.md` 定位**，再读目标文档，再动手改代码。
+1. **功能设计文档必须先于代码**。任何功能改动都必须先产出或更新 `docs/function-design.md` 中的设计文档，未经设计文档批准的改动即为失败。
 2. **不可删除或跳过测试**。生成新代码后必须执行 `./mvnw test` 验证通过。
 3. **修改代码后必须更新对应模块文档** 的"修改历史"表格（见 `docs/knowledge-maintenance.md`）。
 4. **新增架构决策必须产出 ADR** 到 `docs/adr/`。

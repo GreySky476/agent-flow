@@ -6,6 +6,8 @@ spring:
     username: ${DB_USER:ai_user}
     password: ${DB_PASSWORD:ai_password}
     driver-class-name: org.postgresql.Driver
+  profiles:
+    active: local
 
 models:
   list:
@@ -16,12 +18,12 @@ models:
       model-name: deepseek-v4-flash
       cost-tier: low
 
-    - name: tencent/hy3-preview:free
-      type: openai
-      api-key: ${OPENROUTER_API_KEY:sk-your-openrouter-key}
-      base-url: https://openrouter.ai/api/v1
-      model-name: tencent/hy3-preview:free
-      cost-tier: medium
+#    - name: tencent/hy3-preview:free
+#      type: openai
+#      api-key: ${OPENROUTER_API_KEY:sk-your-openrouter-key}
+#      base-url: https://openrouter.ai/api/v1
+#      model-name: tencent/hy3-preview:free
+#      cost-tier: medium
 
     - name: z-ai/glm-4.5-air:free
       type: openai
@@ -30,12 +32,12 @@ models:
       model-name: z-ai/glm-4.5-air:free
       cost-tier: high
 
-    - name: qwen/qwen3-coder:free
-      type: qwen
-      api-key: ${OPENROUTER_API_KEY:sk-your-openrouter-key}
-      base-url: https://openrouter.ai/api/v1
-      model-name: qwen/qwen3-coder:free
-      cost-tier: low
+#    - name: qwen/qwen3-coder:free
+#      type: qwen
+#      api-key: ${OPENROUTER_API_KEY:sk-your-openrouter-key}
+#      base-url: https://openrouter.ai/api/v1
+#      model-name: qwen/qwen3-coder:free
+#      cost-tier: low
 
     - name: azure-gpt4
       type: azure
@@ -44,12 +46,12 @@ models:
       model-name: gpt-4
       cost-tier: high
 
-    - name: local-llama3
-      type: ollama
-      api-key: ""
-      base-url: http://localhost:11434
-      model-name: llama3
-      cost-tier: low
+#    - name: local-llama3
+#      type: ollama
+#      api-key: ""
+#      base-url: http://localhost:11434
+#      model-name: llama3
+#      cost-tier: low
 
 resilience4j:
   circuitbreaker:
