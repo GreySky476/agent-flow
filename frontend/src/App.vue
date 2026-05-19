@@ -27,10 +27,6 @@
           <el-icon><Operation /></el-icon>
           <span>工作流</span>
         </el-menu-item>
-        <el-menu-item index="/tools">
-          <el-icon><Switch /></el-icon>
-          <span>工具市场</span>
-        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-main>
@@ -40,5 +36,5 @@
 </template>
 
 <script setup>
-import { Monitor, Document, Search, Operation, Switch } from '@element-plus/icons-vue'
+import { Monitor, Document, Search, Operation } from '@element-plus/icons-vue'
 </script>
