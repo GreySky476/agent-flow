@@ -1,0 +1,53 @@
+# ============================================
+# Agent Flow 本地开发配置模板
+# 复制此文件为 application-local.yml 并填写真实 API Key
+# cp application-local.yml.example application-local.yml
+# ============================================
+
+# --- LLM 模型配置 ---
+# 至少配置一个模型，推荐 DeepSeek（国内可直接使用）
+models:
+  list:
+    - name: deepseek-v4-flash
+      type: openai
+      api-key: sk-your-deepseek-key     # 替换为你的 DeepSeek API Key
+      base-url: https://api.deepseek.com
+      model-name: deepseek-v4-flash
+      cost-tier: low
+
+#    - name: tencent/hy3-preview:free
+#      type: openai
+#      api-key: sk-your-openrouter-key  # 替换为你的 OpenRouter API Key
+#      base-url: https://openrouter.ai/api/v1
+#      model-name: tencent/hy3-preview:free
+#      cost-tier: medium
+
+#    - name: z-ai/glm-4.5-air:free
+#      type: openai
+#      api-key: sk-your-openrouter-key
+#      base-url: https://openrouter.ai/api/v1
+#      model-name: z-ai/glm-4.5-air:free
+#      cost-tier: high
+
+#    - name: azure-gpt4
+#      type: azure
+#      api-key: sk-your-azure-key       # 替换为你的 Azure OpenAI API Key
+#      base-url: https://your-resource.openai.azure.com
+#      model-name: gpt-4
+#      cost-tier: high
+
+#    - name: local-ollama
+#      type: ollama
+#      api-key: ""
+#      base-url: http://localhost:11434
+#      model-name: llama3
+#      cost-tier: low
+
+# --- RAG 嵌入模型 ---
+# 启用 RAG 功能时需要配置
+rag:
+  embedding:
+    api-key: sk-your-siliconflow-key    # 替换为你的 SiliconFlow API Key
+    base-url: https://api.siliconflow.cn/v1
+    model-name: BAAI/bge-large-zh-v1.5
+    dimension: 1024
