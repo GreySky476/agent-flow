@@ -54,7 +54,7 @@
         <el-form-item label="System Prompt">
           <el-input v-model="editingConfig.systemPrompt" type="textarea" :rows="4" placeholder="你是一个智能助手" />
         </el-form-item>
-        <el-form-item label="温度 (Temperature)">
+        <el-form-item label="温度">
           <el-slider v-model="editingConfig.temperature" :min="0" :max="2" :step="0.1" show-input style="width: 100%" />
         </el-form-item>
         <el-divider content-position="left">RAG 增强（可选）</el-divider>

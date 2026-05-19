@@ -12,6 +12,7 @@
 | WF-001 | 工作流组件重构（LLM/BRANCH 替代 AGENT） | P0 | DONE | `agent-flow-workflow`, `agent-flow-app` |
 | WF-002 | 工作流版本管理与发布 | P1 | DONE | `agent-flow-workflow` |
 | WF-003 | 工作流列表 / 聊天页面（前端） | P1 | DONE | `frontend` |
+| WF-004 | Bug 修复：调用日志/删除/发布/聊天缓存/RAG 简介 | P0 | DONE | `agent-flow-workflow`, `frontend` |
 
 ---
 
@@ -22,6 +23,7 @@
 | WF-001 | 工作流组件重构 | 2026-05-19 |
 | WF-002 | 工作流版本管理与发布 | 2026-05-19 |
 | WF-003 | 工作流列表 / 聊天页面 | 2026-05-19 |
+| WF-004 | Bug 修复 | 2026-05-19 |
 
 ---
 

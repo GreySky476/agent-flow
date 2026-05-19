@@ -88,7 +88,8 @@
 | PUT | `/api/v1/agentflow/definitions/{id}/public` | 切换公开状态 | Body: `{"isPublic":true}` |
 | GET | `/api/v1/agentflow/definitions/published` | 已发布且公开的工作流列表 | — |
 | POST | `/api/v1/agentflow/execute/{definitionId}` | 执行工作流 | Path: `definitionId`, Body: `Map<String,Object>` |
-| POST | `/api/v1/agentflow/chat/{definitionId}` | 工作流聊天（交互式执行） | Path: `definitionId`, Body: `{"message":"...","conversationId":"..."}` |
+| POST | `/api/v1/agentflow/chat/{definitionId}` | 工作流聊天（交互式执行，自动持久化到 Redis） | Path: `definitionId`, Body: `{"message":"...","sessionId":"..."}` |
+| GET | `/api/v1/agentflow/chat/{definitionId}/history` | 加载聊天历史 | Path: `definitionId`, Query: `sessionId` |
 | GET | `/api/v1/agentflow/status/{instanceId}` | 查询执行状态 | Path: `instanceId` |
 | GET | `/api/v1/agentflow/tools` | 已注册工具列表 | — |
 
@@ -196,4 +197,5 @@
 | 日期 | 变更 | 作者 |
 |------|------|------|
 | 2026-05-19 | 初始文档 | AI Agent |
-| 2026-05-19 | Workflow API 扩展：新增列表、删除、发布、公开、已发布列表、聊天端点；移除 AGENT 节点类型示例 | AI Agent |
+| 2026-05-19 | Workflow API 扩展：新增列表、删除、发布、公开、已发布列表、聊天端点 | AI Agent |
+| 2026-05-19 | 聊天端点新增 sessionId 替换 conversationId，新增 /chat/{id}/history 历史加载；列表默认排除 ARCHIVED | AI Agent |

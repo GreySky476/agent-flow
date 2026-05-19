@@ -17,8 +17,8 @@
 
     <properties>
         <java.version>21</java.version>
-        <langchain4j.version>1.13.1</langchain4j.version>
-        <langchain4j.beta.version>1.13.1-beta23</langchain4j.beta.version>
+        <langchain4j.version>1.14.1</langchain4j.version>
+        <langchain4j.beta.version>1.14.1-beta24</langchain4j.beta.version>
         <resilience4j.version>2.3.0</resilience4j.version>
     </properties>
 

@@ -10,9 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.agentflow.entity.WorkflowDefinition;
-import com.example.agentflow.entity.WorkflowNode;
 import com.example.agentflow.mapper.WorkflowDefinitionMapper;
-import com.example.agentflow.mapper.WorkflowNodeMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 public class WorkflowVersionService {
 
     private final WorkflowDefinitionMapper definitionMapper;
-    private final WorkflowNodeMapper nodeMapper;
 
     public WorkflowDefinition publish(Long definitionId, boolean isPublic) {
         WorkflowDefinition def = definitionMapper.selectById(definitionId);
@@ -33,43 +30,16 @@ public class WorkflowVersionService {
 
         int newVersion = (def.getVersion() != null ? def.getVersion() : 0) + 1;
 
-        WorkflowDefinition published = new WorkflowDefinition();
-        published.setName(def.getName());
-        published.setDescription(def.getDescription());
-        published.setStatus("PUBLISHED");
-        published.setVersion(newVersion);
-        published.setIsPublic(isPublic);
-        published.setInputSchema(def.getInputSchema());
-        published.setOutputSchema(def.getOutputSchema());
-        published.setDefinitionJson(def.getDefinitionJson());
-        published.setCreatedAt(LocalDateTime.now());
-        published.setUpdatedAt(LocalDateTime.now());
-        definitionMapper.insert(published);
-
-        List<WorkflowNode> nodes = nodeMapper.selectList(
-                new LambdaQueryWrapper<WorkflowNode>()
-                        .eq(WorkflowNode::getDefinitionId, definitionId));
-
-        for (WorkflowNode node : nodes) {
-            WorkflowNode copiedNode = new WorkflowNode();
-            copiedNode.setDefinitionId(published.getId());
-            copiedNode.setNodeId(node.getNodeId());
-            copiedNode.setNodeType(node.getNodeType());
-            copiedNode.setConfigJson(node.getConfigJson());
-            copiedNode.setPositionX(node.getPositionX());
-            copiedNode.setPositionY(node.getPositionY());
-            copiedNode.setNextNodes(node.getNextNodes());
-            nodeMapper.insert(copiedNode);
-        }
-
+        def.setStatus("PUBLISHED");
         def.setVersion(newVersion);
+        def.setIsPublic(isPublic);
         def.setUpdatedAt(LocalDateTime.now());
         definitionMapper.updateById(def);
 
-        log.info("Published workflow [{}] version [{}], published id: [{}], isPublic: {}",
-                def.getName(), newVersion, published.getId(), isPublic);
+        log.info("Published workflow [{}] version [{}], id: [{}], isPublic: {}",
+                def.getName(), newVersion, def.getId(), isPublic);
 
-        return published;
+        return def;
     }
 
     public List<Map<String, Object>> listPublished() {

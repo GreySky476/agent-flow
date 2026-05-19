@@ -1,14 +1,20 @@
 package com.example.agentflow.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.example.agentflow.entity.GatewayCallLog;
 import com.example.agentflow.entity.WorkflowNode;
 import com.example.agentflow.model.ChatRequest;
 import com.example.agentflow.model.WorkflowState;
+import com.example.agentflow.service.GatewayCallLogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.model.chat.ChatModel;
@@ -23,6 +29,7 @@ public class LlmNodeExecutor {
 
     private final SmartChatRouter smartChatRouter;
     private final ToolRegistry toolRegistry;
+    private final GatewayCallLogService gatewayCallLogService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @SuppressWarnings("unchecked")
@@ -62,17 +69,53 @@ public class LlmNodeExecutor {
                 .tools(toolObjects.toArray())
                 .build();
 
+        String requestId = UUID.randomUUID().toString().replace("-", "");
+        Instant start = Instant.now();
+        int promptTokens = userMessage.length() / 2;
+        boolean success = false;
+        String errorMsg = null;
+        String response = null;
+
         try {
-            String response = aiService.chat(userMessage);
+            response = aiService.chat(userMessage);
+            success = true;
             state.put("_llm_" + node.getNodeId() + "_response", response);
             log.info("LLM node [{}] response length: {}", node.getNodeId(),
                     response != null ? response.length() : 0);
         } catch (Exception e) {
             log.error("LLM node [{}] call failed", node.getNodeId(), e);
-            state.put("_llm_" + node.getNodeId() + "_error", e.getMessage());
+            String err = e.getMessage();
+            if (err != null && err.length() > 1000) err = err.substring(0, 1000);
+            errorMsg = e.getClass().getSimpleName() + ": " + err;
+            state.put("_llm_" + node.getNodeId() + "_error", err);
+        } finally {
+            long latencyMs = java.time.Duration.between(start, Instant.now()).toMillis();
+            int completionTokens = response != null ? response.length() / 2 : 0;
+            try {
+                GatewayCallLog logEntry = new GatewayCallLog();
+                logEntry.setRequestId(requestId);
+                logEntry.setModelName(modelName);
+                logEntry.setPromptTokens(promptTokens);
+                logEntry.setCompletionTokens(completionTokens);
+                logEntry.setLatencyMs(latencyMs);
+                logEntry.setSuccess(success);
+                logEntry.setErrorMsg(errorMsg);
+                logEntry.setCostEstimate(estimateCost(promptTokens, completionTokens));
+                gatewayCallLogService.save(logEntry);
+            } catch (Exception e) {
+                log.warn("Failed to persist LLM call log", e);
+            }
         }
 
         return state;
+    }
+
+    private BigDecimal estimateCost(int promptTokens, int completionTokens) {
+        BigDecimal inputCost = new BigDecimal("0.000005");
+        BigDecimal outputCost = new BigDecimal("0.000015");
+        BigDecimal input = BigDecimal.valueOf(promptTokens).divide(BigDecimal.valueOf(1000), 10, RoundingMode.HALF_UP);
+        BigDecimal output = BigDecimal.valueOf(completionTokens).divide(BigDecimal.valueOf(1000), 10, RoundingMode.HALF_UP);
+        return input.multiply(inputCost).add(output.multiply(outputCost)).setScale(6, RoundingMode.HALF_UP);
     }
 
     private ChatModel resolveChatModel(String modelName) {
