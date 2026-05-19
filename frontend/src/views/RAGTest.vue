@@ -189,9 +189,14 @@ async function handleQuery() {
       question: question.value,
       conversationId: ''
     })
-    qaResult.value = res.data
+    if (res.data.success === false) {
+      ElMessage.error('查询失败: ' + res.data.error)
+      qaResult.value = null
+    } else {
+      qaResult.value = res.data
+    }
   } catch (e) {
-    ElMessage.error('查询失败: ' + (e.response?.data?.message || e.message))
+    ElMessage.error('请求失败: ' + (e.response?.data?.message || e.message))
   } finally {
     querying.value = false
   }

@@ -21,6 +21,14 @@ public class WorkflowDefinition {
 
     private String status;
 
+    private Integer version;
+
+    private Boolean isPublic;
+
+    private String inputSchema;
+
+    private String outputSchema;
+
     private String definitionJson;
 
     private LocalDateTime createdAt;

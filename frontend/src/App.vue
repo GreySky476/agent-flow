@@ -23,9 +23,13 @@
           <el-icon><Search /></el-icon>
           <span>RAG 检索</span>
         </el-menu-item>
-        <el-menu-item index="/agent-designer">
+        <el-menu-item index="/workflows">
           <el-icon><Operation /></el-icon>
-          <span>工作流</span>
+          <span>工作流列表</span>
+        </el-menu-item>
+        <el-menu-item index="/workflow-chat">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>工作流聊天</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -36,5 +40,5 @@
 </template>
 
 <script setup>
-import { Monitor, Document, Search, Operation } from '@element-plus/icons-vue'
+import { Monitor, Document, Search, Operation, ChatDotRound } from '@element-plus/icons-vue'
 </script>

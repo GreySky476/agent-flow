@@ -1,7 +1,7 @@
 # 数据库 Schema
 
 > 数据库：PostgreSQL（pgvector 扩展）  
-> DDL 源文件：`agent-flow-app/src/main/resources/resources/db/schema.sql`
+> DDL 源文件：`agent-flow-app/src/main/resources/db/schema.sql`
 
 ---
 
@@ -47,18 +47,28 @@ CREATE TABLE gateway_call_log (
 ### wf_definition（工作流定义）
 
 ```sql
-CREATE TABLE wf_definition (
+CREATE TABLE IF NOT EXISTS wf_definition (
     id               BIGSERIAL PRIMARY KEY,
     name             VARCHAR(255) NOT NULL,
     description      TEXT,
     status           VARCHAR(20) DEFAULT 'DRAFT',
+    version          INT DEFAULT 1,
+    is_public        BOOLEAN DEFAULT FALSE,
+    input_schema     TEXT,
+    output_schema    TEXT,
     definition_json  TEXT,
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-`status` 可选值：`DRAFT` | `PUBLISHED` | `ARCHIVED`
+| 字段 | 说明 |
+|------|------|
+| `status` | `DRAFT` \| `PUBLISHED` \| `ARCHIVED` |
+| `version` | 版本号，每次发布自增 |
+| `is_public` | 是否公开（公开后在工作流聊天可见） |
+| `input_schema` | 输入参数 JSON Schema |
+| `output_schema` | 输出参数 JSON Schema |
 
 ---
 
@@ -79,8 +89,8 @@ CREATE TABLE wf_node (
 
 | 字段 | 说明 |
 |------|------|
-| `node_type` | `START` / `END` / `AGENT` / `CONDITION` / `TOOL` |
-| `config_json` | JSON 字符串，AGENT 类型存 `{"agentName":"xxx"}`，CONDITION 类型存 `{"expression":"xxx"}` |
+| `node_type` | `START` / `END` / `LLM` / `BRANCH` / `CONDITION` |
+| `config_json` | JSON 字符串，LLM 类型存 `{"modelName":"...","systemPrompt":"...","rag":{...},"toolNames":[...]}`，BRANCH 类型存 `{"conditionType":"...","expression":"..."}` |
 | `next_nodes` | 逗号分隔的下游 `node_id` 列表 |
 | `position_x/y` | 前端设计器中的坐标 |
 
@@ -137,3 +147,4 @@ CREATE INDEX idx_rag_embeddings_text_fts
 | 日期 | 变更 | 作者 |
 |------|------|------|
 | 2026-05-19 | 初始文档 | AI Agent |
+| 2026-05-19 | wf_definition 新增 version、is_public、input_schema、output_schema；wf_node 类型更新为 LLM/BRANCH | AI Agent |
